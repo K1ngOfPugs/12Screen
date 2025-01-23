@@ -1,0 +1,7 @@
+### Go ####
+
+# Binaries
+*.exe
+
+# Libraries (Icons, etc)
+*.syso

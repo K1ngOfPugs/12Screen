@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	_ "embed"
 	"github.com/fatih/color"
 	"github.com/melbahja/goph"
 	"log"
 	"os"
+	"strings"
 )
 
 //BUILD INSTRUCTIONS
@@ -26,6 +28,8 @@ var entitlements []byte
 var client *goph.Client
 
 var err error
+
+var uploaded bool
 
 func sendFiles() {
 	_ = os.WriteFile("keychain_dumper", keychain_dumper, 0755)
@@ -48,6 +52,8 @@ func sendFiles() {
 	if err != nil {
 		close(err)
 	}
+
+	uploaded = true
 }
 
 func initSSH() {
@@ -71,23 +77,35 @@ func main() {
 
 	sendFiles()
 
-	//close(nil)
-
 	c.Println("[*] Payload upload complete. Running payload...")
 	c.Println("[*] Please authenticate on your device when asked.")
 
 	recv, _ := client.Run("bash -c '/var/mobile/run.sh'")
 	out := string(recv)
-	_, err = client.Run("rm /var/mobile/run.sh")
-	_, err = client.Run("rm /var/mobile/id.sh")
 
 	c.Println("[*] Payload complete. Your Screentime PIN is: ")
 	c.Println("[*] " + color.RedString(out))
+
+	reader := bufio.NewReader(os.Stdin)
+	c.Println("[*] Would you like to remove your Apple ID? [y/N]: ")
+	input, _ := reader.ReadString('\n')
+	input = strings.TrimSpace(strings.ToLower(input))
+	input = string(input[0])
+
+	if input == "y" {
+		c.Println("[*] Removing Apple ID...")
+		_, _ = client.Run("bash -c '/var/mobile/id.sh'")
+	}
 
 	close(nil)
 }
 
 func close(err error) {
+	if uploaded == true {
+		_, err = client.Run("rm /var/mobile/run.sh")
+		_, err = client.Run("rm /var/mobile/id.sh")
+	}
+
 	if err != nil {
 		log.Fatal(err)
 	} else {
