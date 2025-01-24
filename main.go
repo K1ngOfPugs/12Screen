@@ -7,11 +7,10 @@ import (
 	"github.com/melbahja/goph"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 )
-
-//BUILD INSTRUCTIONS
-//go:generate go-winres make
 
 //go:embed payload/keychain_dumper
 var keychain_dumper []byte
@@ -65,7 +64,17 @@ func initSSH() {
 	}
 }
 
+func interruptHandler(ch chan os.Signal) {
+	_ = <-ch
+	close(nil)
+}
+
 func main() {
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
+
+	go interruptHandler(ch)
+
 	c := color.New(color.FgCyan)
 
 	c.Println("[*] 12Screen bypass by K1ngOfPugs")
