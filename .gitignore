@@ -1,7 +1,10 @@
 ### Go ####
 
 # Binaries
-*.exe
+bin/
 
 # Libraries (Icons, etc)
 *.syso
+
+# Build tools
+build.bat
